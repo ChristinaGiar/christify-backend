@@ -24,5 +24,5 @@ app.use(errorHandler)
 
 const PORT = process.env.PORT || process.env.LOCAL_PORT
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`)
+  console.log(`Christify backend listening on port ${PORT}`)
 })
