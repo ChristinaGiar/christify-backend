@@ -1,6 +1,8 @@
 import express from 'express'
 import axios from 'axios'
 import { getLatestSongs, addLatestSong } from '../firebase.js'
+import { SPOTIFY_URL } from '../utils/constants.js'
+
 const authRouter = await import('./auth.js')
 
 const router = express.Router()
@@ -9,7 +11,7 @@ router.get('/track', (req, res, next) => {
   try {
     axios({
       method: 'get',
-      url: 'https://api.spotify.com/v1/tracks/' + req.query.trackID,
+      url: `${SPOTIFY_URL}/tracks/${req.query.trackID}`,
       headers: {
         Authorization: 'Bearer ' + authRouter.accessToken,
       },
@@ -34,7 +36,7 @@ router.get('/searchAlbums', async (req, res, next) => {
   try {
     const requestedData = await axios({
       method: 'get',
-      url: `https://api.spotify.com/v1/search?q=${req.query.q}&offset=${req.query.offset}&limit=${req.query.limit}&type=album&market=GB`,
+      url: `${SPOTIFY_URL}/search?q=${req.query.q}&offset=${req.query.offset}&limit=${req.query.limit}&type=album&market=GB`,
       headers: {
         Authorization: 'Bearer ' + authRouter.accessToken,
       },
@@ -69,7 +71,7 @@ router.get('/searchTracks', async (req, res, next) => {
   try {
     const requestedData = await axios({
       method: 'get',
-      url: `https://api.spotify.com/v1/search?q=${req.query.q}&offset=${req.query.offset}&limit=${req.query.limit}&type=track&market=GB`,
+      url: `${SPOTIFY_URL}/search?q=${req.query.q}&offset=${req.query.offset}&limit=${req.query.limit}&type=track&market=GB`,
       headers: {
         Authorization: 'Bearer ' + authRouter.accessToken,
       },
@@ -113,11 +115,12 @@ router.get('/album', async (req, res, next) => {
   try {
     const requestedData = await axios({
       method: 'get',
-      url: `https://api.spotify.com/v1/albums/${req.query.albumID}`, //?market=GB
+      url: `${SPOTIFY_URL}/albums/${req.query.albumID}`, //?market=GB
       headers: {
         Authorization: 'Bearer ' + authRouter.accessToken,
       },
     })
+
     let formattedTracks = []
     const album = requestedData.data
     const { name, id, artists, tracks, images } = album
@@ -127,6 +130,7 @@ router.get('/album', async (req, res, next) => {
         name: artist.name,
       }
     })
+
     for (let item of tracks.items) {
       const { id: trackID, name: trackName, preview_url } = item
       let formattedTrack = {
@@ -150,6 +154,37 @@ router.get('/album', async (req, res, next) => {
       image: images[0],
       artists: mappedArtists,
       tracks: formattedTracks,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/releaseAlbum', async (req, res, next) => {
+  try {
+    const requestedData = await axios({
+      method: 'get',
+      url: `${SPOTIFY_URL}/browse/new-releases?limit=5&offset=0`,
+      headers: {
+        Authorization: 'Bearer ' + authRouter.accessToken,
+      },
+    })
+    const randomIndex = Math.floor(Math.random() * 5)
+
+    const album = requestedData.data.albums.items[randomIndex]
+    const { name, id, artists, images } = album
+    const mappedArtists = artists.map((artist) => {
+      return {
+        artistID: artist.id,
+        name: artist.name,
+      }
+    })
+
+    res.status(200).send({
+      albumID: id,
+      name: name,
+      image: images[0]?.url,
+      artists: mappedArtists,
     })
   } catch (error) {
     next(error)
