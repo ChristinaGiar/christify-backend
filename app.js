@@ -11,7 +11,7 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(express.urlencoded({ extended: true }))
 
-const errorHandler = (error, req, res) => {
+const errorHandler = (error, req, res, next) => {
   console.log(`Error ${error.message}`)
   const status = error.status || 400
   res.status(status).send({ error: error.message })
