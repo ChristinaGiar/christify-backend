@@ -1,13 +1,10 @@
 import { initializeApp, cert } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-
-import { readFile } from 'fs/promises'
-const serviceAccount = JSON.parse(
-  await readFile(new URL('./christify-key.json', import.meta.url))
-)
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 initializeApp({
-  credential: cert(serviceAccount),
+  credential: cert(JSON.parse(process.env.CHRISTIFY_KEY)),
 })
 
 const db = getFirestore()
@@ -28,7 +25,7 @@ export const getLatestSongs = async () => {
 
   const snapshot = await db
     .collection('songs')
-    .orderBy('timestamp', 'desc') //FieldValue.documentId()
+    .orderBy('timestamp', 'desc')
     .get()
   snapshot.forEach((doc) => songs.push(doc.data()))
 
